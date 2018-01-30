@@ -27,6 +27,9 @@ class Box:
             x, y = face.get_width_length_on_plane(self.width, self.length, self.height)
             for ornament in self.ornaments[face]:
                 hole, add = ornament.render(x, y, self.wall_thickness)
+                if ornament.SIDE == Side.INTERNAL:
+                    hole = solid.translate([0, 0, self.wall_thickness])(solid.scale([1, 1, -1])(hole))
+                    add = solid.translate([0, 0, self.wall_thickness])(solid.scale([1, 1, -1])(add))
                 wall_holes += [hole]
                 wall_adds += [add]
             wall = wall - solid.union()(wall_holes) + solid.union()(wall_adds)
@@ -75,7 +78,7 @@ class RoundedBox(Box):
         # To get rid of some openscad sphere artifacts, we need to make sure all spheres are oriented the same way
         sphere_rot = 0 if face in (Face.BOTTOM, Face.TOP) else 90
         sphere_v = (0, 1, 0) if face in (Face.LEFT, Face.RIGHT) else (1, 0, 0)
-        return (solid.translate([self.corner_radius, self.corner_radius, self.corner_radius])(
+        return solid.translate([self.corner_radius, self.corner_radius, self.corner_radius])(
             solid.minkowski()(
                 solid.cube([
                     x-(self.corner_radius*2),
