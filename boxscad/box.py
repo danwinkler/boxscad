@@ -11,6 +11,9 @@ class Box:
         self.wall_thickness = wall_thickness
         self.ornaments = defaultdict(list)
 
+    def center(self):
+        return self.width/2, self.length/2, self.height/2
+
     def add_ornament(self, face, ornament):
         self.ornaments[face].append(ornament)
 
@@ -27,7 +30,7 @@ class Box:
             x, y = face.get_width_length_on_plane(self.width, self.length, self.height)
             for ornament in self.ornaments[face]:
                 hole, add = ornament.render(x, y, self.wall_thickness)
-                if ornament.SIDE == Side.INTERNAL:
+                if getattr(ornament, 'SIDE', Side.EXTERNAL) == Side.INTERNAL:
                     hole = solid.translate([0, 0, self.wall_thickness])(solid.scale([1, 1, -1])(hole))
                     add = solid.translate([0, 0, self.wall_thickness])(solid.scale([1, 1, -1])(add))
                 wall_holes += [hole]
@@ -40,8 +43,8 @@ class Box:
     def rotate_wall_to_face(self, wall, face):
         """Given a wall, assumed to be laying on the xy plane, rotate it to the correct face"""
         if face == Face.BOTTOM:
-            return solid.translate([self.width, 0,self.wall_thickness])(
-                solid.rotate(a=180, v=[0, 1, 0])(wall)
+            return solid.translate([0, 0,self.wall_thickness])(
+                solid.scale([1, 1, -1])(wall)
             )
         elif face == Face.TOP:
             return solid.translate([0, 0, self.height-self.wall_thickness])(wall)
